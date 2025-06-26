@@ -38,6 +38,7 @@ const images: GalleryImage[] = await Promise.all(imagesRes.data.map(async (image
   const thumbFile = path.resolve('public/images/gallery', thumbName);
 
   if (!fs.existsSync(file)) {
+    console.log(`Downloading to ${file}`);
     const res = await fetch(import.meta.env.STRAPI_ENDPOINT + img.url);
     const fileStream = fs.createWriteStream(file, {flags: 'wx'});
     await finished(Readable.fromWeb(res.body as any).pipe(fileStream));
@@ -45,6 +46,7 @@ const images: GalleryImage[] = await Promise.all(imagesRes.data.map(async (image
 
   let {width: w, height: h} = await imageSizeFromFile(file);
 
+  console.log(`Resizing to ${thumbFile}`);
   await sharp(file)
     .resize(300, 300, { fit: 'cover' })
     .toFile(thumbFile);
