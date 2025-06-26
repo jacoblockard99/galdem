@@ -9,11 +9,13 @@ import {Readable} from 'stream';
 import {finished} from 'stream/promises';
 
 import {marked} from 'marked';
-import {ImageMetadata} from "astro";
+import {imageSizeFromFile} from "image-size/fromFile";
+import sharp from 'sharp';
 
 interface GalleryImage {
   Caption: string;
   File: string;
+  ThumbFile: string;
   Description: string;
   Width: number;
   Height: number;
@@ -28,40 +30,30 @@ const imagesRes = await gallery.find({
   populate: '*'
 });
 
-let i = 0;
 const images: GalleryImage[] = await Promise.all(imagesRes.data.map(async (imageRes) => {
   const img = imageRes.Image;
   const name = img.hash + '.downloaded' + img.ext;
-  const file = path.resolve("src/images/gallery", name);
+  const thumbName = img.hash + '.thumb.downloaded' + img.ext;
+  const file = path.resolve("public/images/gallery", name);
+  const thumbFile = path.resolve('public/images/gallery', thumbName);
 
   if (!fs.existsSync(file)) {
     const res = await fetch(import.meta.env.STRAPI_ENDPOINT + img.url);
     const fileStream = fs.createWriteStream(file, {flags: 'wx'});
     await finished(Readable.fromWeb(res.body as any).pipe(fileStream));
   }
-  i++;
 
-  const imgImports = import.meta.glob<{ default: ImageMetadata }>('../images/gallery/*');
-  const iFile = (await imgImports['../images/gallery/' + name]()).default;
+  let {width: w, height: h} = await imageSizeFromFile(file);
 
-  if (iFile.width < 300 || iFile.height < 300)
-    throw new Error("Badly sized image");
-
-  let width = 0;
-  let height = 0;
-
-  if (iFile.width > iFile.height) {
-    height = 300;
-  } else {
-    width = 300;
-  }
+  await sharp(file)
+    .resize(300, 300, { fit: 'cover' })
+    .toFile(thumbFile);
 
   return {
     Caption: imageRes.Caption,
     Description: imageRes.Description ? marked.parse(imageRes.Description) : '',
-    File: iFile,
-    Width: width,
-    Height: height
+    File: '/images/gallery/' + name,
+    ThumbFile: '/images/gallery/' + thumbName
   };
 }));
 ---
@@ -81,8 +73,8 @@ const images: GalleryImage[] = await Promise.all(imagesRes.data.map(async (image
 </div>
 <div class="container">
   {images.map(image => (
-      <a class="image" href={image.File.src}>
-        <Image src={image.File} alt={image.Caption} width={image.Width} height={image.Height} />
+      <a class="image" href={image.File}>
+        <img src={image.ThumbFile} alt={image.Caption} width="300" height="300" />
         <h2>{image.Caption}</h2>
         <div class="text" set:html={image.Description}></div>
       </a >
