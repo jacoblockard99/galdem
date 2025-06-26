@@ -9,6 +9,7 @@ import {Readable} from 'stream';
 import {finished} from 'stream/promises';
 
 import {marked} from 'marked';
+import {ImageMetadata} from "astro";
 
 interface GalleryImage {
   Caption: string;
@@ -40,7 +41,8 @@ const images: GalleryImage[] = await Promise.all(imagesRes.data.map(async (image
   }
   i++;
 
-  const iFile = (await import(file)).default;
+  const imgImports = import.meta.glob<{ default: ImageMetadata }>('../images/gallery/*');
+  const iFile = (await imgImports['../images/gallery/' + name]()).default;
 
   if (iFile.width < 300 || iFile.height < 300)
     throw new Error("Badly sized image");
