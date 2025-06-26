@@ -30,7 +30,9 @@ const imagesRes = await gallery.find({
   populate: '*'
 });
 
-const images: GalleryImage[] = await Promise.all(imagesRes.data.map(async (imageRes) => {
+const images: GalleryImage[] = [];
+
+for (const imageRes of imagesRes.data) {
   const img = imageRes.Image;
   const name = img.hash + '.downloaded' + img.ext;
   const thumbName = img.hash + '.thumb.downloaded' + img.ext;
@@ -48,16 +50,16 @@ const images: GalleryImage[] = await Promise.all(imagesRes.data.map(async (image
 
   console.log(`Resizing to ${thumbFile}`);
   await sharp(file)
-    .resize(300, 300, { fit: 'cover' })
-    .toFile(thumbFile);
+  .resize(300, 300, {fit: 'cover'})
+  .toFile(thumbFile);
 
-  return {
+  images.push({
     Caption: imageRes.Caption,
     Description: imageRes.Description ? marked.parse(imageRes.Description) : '',
     File: '/images/gallery/' + name,
     ThumbFile: '/images/gallery/' + thumbName
-  };
-}));
+  });
+}
 ---
 
 <html lang="en">
@@ -76,10 +78,10 @@ const images: GalleryImage[] = await Promise.all(imagesRes.data.map(async (image
 <div class="container">
   {images.map(image => (
       <a class="image" href={image.File}>
-        <img src={image.ThumbFile} alt={image.Caption} width="300" height="300" />
+        <img src={image.ThumbFile} alt={image.Caption} width="300" height="300"/>
         <h2>{image.Caption}</h2>
         <div class="text" set:html={image.Description}></div>
-      </a >
+      </a>
   ))}
 </div>
 </body>
