@@ -32,6 +32,8 @@ const imagesRes = await gallery.find({
 
 const images: GalleryImage[] = [];
 
+fs.writeFileSync('public/something.txt', 'hello');
+
 for (const imageRes of imagesRes.data) {
   const img = imageRes.Image;
   const name = img.hash + '.downloaded' + img.ext;
