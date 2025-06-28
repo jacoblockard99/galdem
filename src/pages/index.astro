@@ -60,6 +60,10 @@ for (const imageRes of imagesRes.data) {
     ThumbFile: '/images/gallery/' + thumbName
   });
 }
+
+fs.readdirSync('./').forEach(file => {
+  console.log(file);
+});
 ---
 
 <html lang="en">
