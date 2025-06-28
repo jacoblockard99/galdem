@@ -61,7 +61,11 @@ for (const imageRes of imagesRes.data) {
   });
 }
 
-fs.readdirSync('./').forEach(file => {
+fs.readdirSync('./public').forEach(file => {
+  console.log(file);
+});
+console.log('-------------')
+fs.readdirSync('./public/images/gallery').forEach(file => {
   console.log(file);
 });
 ---
